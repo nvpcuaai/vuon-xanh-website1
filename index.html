@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Văn Phú Shop - Ví Điện Tử</title>
+    <style>
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif;}
+        :root {--primary:#2563eb; --success:#16a34a; --danger:#dc2626; --bg:#f8fafc; --card:#fff; --text:#1e293b;}
+        body {background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:70px;}
+        
+        /* Header */
+        header {background:linear-gradient(135deg, var(--primary), #1d4ed8); color:white; padding:20px; text-align:center;}
+        header h1 {font-size:22px; margin-bottom:5px;}
+        .balance-card {background:rgba(255,255,255,0.2); border-radius:12px; padding:15px; margin-top:10px; backdrop-filter:blur(10px);}
+        .balance-label {font-size:13px; opacity:0.9;}
+        .balance-amount {font-size:28px; font-weight:bold; margin-top:5px;}
+        
+        /* Nav */
+        .nav-top {display:flex; background:white; padding:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05); position:sticky; top:0; z-index:99; overflow-x:auto; gap:5px;}
+        .nav-btn {padding:10px 15px; border:none; background:#f1f5f9; border-radius:8px; cursor:pointer; font-size:14px; white-space:nowrap; transition:0.2s;}
+        .nav-btn.active {background:var(--primary); color:white;}
+        
+        /* Main Content */
+        main {padding:15px; max-width:500px; margin:0 auto;}
+        .page {display:none; animation:fadeIn 0.3s;}
+        .page.active {display:block;}
+        @keyframes fadeIn {from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);}}
+        
+        /* Cards & Buttons */
+        .card {background:white; border-radius:12px; padding:18px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+        .card h3 {font-size:16px; margin-bottom:12px; color:#334155;}
+        .btn {width:100%; padding:12px; border:none; border-radius:8px; font-size:15px; font-weight:500; cursor:pointer; transition:0.2s;}
+        .btn-primary {background:var(--primary); color:white;}
+        .btn-success {background:var(--success); color:white;}
+        .btn-danger {background:var(--danger); color:white;}
+        .btn:hover {opacity:0.9;}
+        .btn-group {display:flex; gap:10px; margin-top:10px;}
+        .btn-group .btn {flex:1;}
+        
+        /* Form Input */
+        input, textarea, select {width:100%; padding:12px; border:1px solid #e2e8f0; border-radius:8px; font-size:15px; margin-bottom:12px; outline:none;}
+        input:focus, select:focus {border-color:var(--primary);}
+        label {font-size:14px; color:#475569; margin-bottom:5px; display:block;}
+        
+        /* Products */
+        .product-grid {display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;}
+        .product-item {background:white; border-radius:10px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.05);}
+        .product-img {height:100px; background:linear-gradient(135deg, #e2e8f0, #cbd5e1); display:flex; align-items:center; justify-content:center; font-size:40px;}
+        .product-info {padding:10px;}
+        .product-name {font-size:14px; font-weight:500; margin-bottom:5px;}
+        .product-price {font-size:13px; color:var(--primary); font-weight:bold;}
+        .add-cart-btn {margin-top:8px; padding:6px; font-size:13px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; width:100%;}
+        
+        /* Cart */
+        .cart-item {display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f1f5f9;}
+        .cart-item:last-child {border-bottom:none;}
+        .cart-info h4 {font-size:14px;}
+        .cart-info p {font-size:12px; color:#64748b;}
+        .cart-price {font-weight:bold; color:var(--primary);}
+        .remove-btn {background:#fee2e2; color:var(--danger); border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:12px;}
+        .cart-total {text-align:right; padding-top:15px; font-size:18px; font-weight:bold;}
+        
+        /* Transactions */
+        .tx-item {display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f1f5f9;}
+        .tx-type {padding:4px 8px; border-radius:4px; font-size:12px; font-weight:500;}
+        .tx-type.deposit {background:#dcfce7; color:#166534;}
+        .tx-type.withdraw {background:#fee2e2; color:#991b1b;}
+        .tx-amount {font-weight:bold; font-size:15px;}
+        .tx-date {font-size:11px; color:#94a3b8; margin-top:3px;}
+        
+        /* Bottom Nav */
+        .bottom-nav {position:fixed; bottom:0; left:0; right:0; background:white; display:flex; justify-content:space-around; padding:8px 0; box-shadow:0 -2px 10px rgba(0,0,0,0.05); z-index:100;}
+        .nav-item {display:flex; flex-direction:column; align-items:center; font-size:11px; color:#64748b; cursor:pointer;}
+        .nav-item.active {color:var(--primary);}
+        .nav-item span {font-size:20px; margin-bottom:2px;}
+        
+        /* Toast */
+        .toast {position:fixed; top:20px; right:20px; background:#1e293b; color:white; padding:12px 20px; border-radius:8px; z-index:9999; transform:translateY(-100px); opacity:0; transition:0.3s;}
+        .toast.show {transform:translateY(0); opacity:1;}
+        .toast.success {background:var(--success);}
+        .toast.error {background:var(--danger);}
+        
+        .empty-state {text-align:center; padding:40px 20px; color:#94a3b8;}
+        .empty-state span {font-size:40px; display:block; margin-bottom:10px;}
+    </style>
+</head>
+<body>
+
+<!-- THÔNG BÁO -->
+<div id="toast" class="toast"></div>
+
+<!-- HEADER -->
+<header>
+    <h1>🏪 Văn Phú Shop</h1>
+    <div class="balance-card">
+        <div class="balance-label">💰 Số dư tài khoản</div>
+        <div class="balance-amount" id="balance">0 VNĐ</div>
+    </div>
+</header>
+
+<!-- THANH ĐIỀU HƯỚNG TRÊN -->
+<div class="nav-top">
+    <button class="nav-btn active" data-page="home">🏠 Trang chủ</button>
+    <button class="nav-btn" data-page="cart">🛒 Giỏ hàng</button>
+    <button class="nav-btn" data-page="deposit">⬆️ Nạp tiền</button>
+    <button class="nav-btn" data-page="withdraw">⬇️ Rút tiền</button>
+    <button class="nav-btn" data-page="profile">👤 Tài khoản</button>
+    <button class="nav-btn" data-page="history">📋 Lịch sử</button>
+</div>
+
+<!-- NỘI DUNG CHÍNH -->
+<main>
+    <!-- TRANG CHỦ - SẢN PHẨM -->
+    <div id="home" class="page active">
+        <div class="card">
+            <h3>🛍️ Danh sách sản phẩm</h3>
+            <div class="product-grid" id="productList"></div>
+        </div>
+    </div>
+
+    <!-- GIỎ HÀNG -->
+    <div id="cart" class="page">
+        <div class="card">
+            <h3>🛒 Giỏ hàng của bạn</h3>
+            <div id="cartList"></div>
+            <div class="cart-total" id="cartTotal">Tổng: 0 VNĐ</div>
+            <button class="btn btn-success" style="margin-top:15px;" onclick="checkout()">✅ Thanh toán ngay</button>
+        </div>
+    </div>
+
+    <!-- NẠP TIỀN -->
+    <div id="deposit" class="page">
+        <div class="card">
+            <h3>⬆️ Nạp tiền vào tài khoản</h3>
+            <label>Số tiền muốn nạp</label>
+            <input type="number" id="depositAmount" placeholder="Nhập số tiền">
+            <label>Phương thức thanh toán</label>
+            <select id="depositMethod">
+                <option value="bank">🏦 Chuyển khoản ngân hàng</option>
+                <option value="momo">💳 Ví MoMo</option>
+                <option value="zalopay">💵 ZaloPay</option>
+            </select>
+            <label>Nội dung chuyển khoản</label>
+            <input type="text" id="depositNote" placeholder="Tự động điền mã đơn nếu có">
+            <button class="btn btn-success" onclick="submitDeposit()">✅ Xác nhận nạp tiền</button>
+        </div>
+    </div>
+
+    <!-- RÚT TIỀN -->
+    <div id="withdraw" class="page">
+        <div class="card">
+            <h3>⬇️ Rút tiền</h3>
+            <label>Số tiền muốn rút</label>
+            <input type="number" id="withdrawAmount" placeholder="Nhập số tiền">
+            <label>Thông tin nhận tiền</label>
+            <input type="text" id="withdrawInfo" placeholder="STK - Tên chủ tài khoản - Ngân hàng">
+            <label>Ghi chú</label>
+            <input type="text" id="withdrawNote" placeholder="Ghi chú thêm (nếu có)">
+            <button class="btn btn-primary" onclick="submitWithdraw()">✅ Yêu cầu rút tiền</button>
+        </div>
+    </div>
+
+    <!-- THÔNG TIN & CHỈNH SỬA -->
+    <div id="profile" class="page">
+        <div class="card">
+            <h3>👤 Thông tin tài khoản</h3>
+            <label>Tên hiển thị</label>
+            <input type="text" id="userName" placeholder="Nhập tên của bạn">
+            <label>Số điện thoại</label>
+            <input type="tel" id="userPhone" placeholder="Nhập số điện thoại">
+            <label>Email</label>
+            <input type="email" id="userEmail" placeholder="Nhập email">
+            <label>Địa chỉ</label>
+            <textarea id="userAddress" rows="2" placeholder="Nhập địa chỉ"></textarea>
+            <button class="btn btn-primary" onclick="saveProfile()">💾 Lưu thông tin</button>
+        </div>
+    </div>
+
+    <!-- LỊCH SỬ GIAO DỊCH -->
+    <div id="history" class="page">
+        <div class="card">
+            <h3>📋 Lịch sử giao dịch</h3>
+            <div id="transactionList"></div>
+        </div>
+    </div>
+</main>
+
+<!-- THANH ĐIỀU HƯỚNG DƯỚI -->
+<nav class="bottom-nav">
+    <div class="nav-item active" data-page="home"><span>🏠</span>Trang chủ</div>
+    <div class="nav-item" data-page="cart"><span>🛒</span>Giỏ hàng</div>
+    <div class="nav-item" data-page="deposit"><span>⬆️</span>Nạp tiền</div>
+    <div class="nav-item" data-page="withdraw"><span>⬇️</span>Rút tiền</div>
+    <div class="nav-item" data-page="profile"><span>👤</span>Tài khoản</div>
+</nav>
+
+<script>
+// ==================== DỮ LIỆU ====================
+let products = [
+    {id:1, name:"Thẻ nạp 10K", price:10000, icon:"💳"},
+    {id:2, name:"Thẻ nạp 20K", price:20000, icon:"💳"},
+    {id:3, name:"Thẻ nạp 50K", price:50000, icon:"💳"},
+    {id:4, name:"Thẻ nạp 100K", price:100000, icon:"💳"},
+    {id:5, name:"VIP 1 Tháng", price:30000, icon:"⭐"},
+    {id:6, name:"VIP Vĩnh Viễn", price:150000, icon:"👑"},
+    {id:7, name:"Gói Kim Cương", price:50000, icon:"💎"},
+    {id:8, name:"Gói Vàng", price:25000, icon:"🏆"}
+];
+
+// Khởi tạo dữ liệu từ localStorage
+function initData() {
+    if(!localStorage.getItem('balance')) localStorage.setItem('balance', '0');
+    if(!localStorage.getItem('cart')) localStorage.setItem('cart', '[]');
+    if(!localStorage.getItem('transactions')) localStorage.setItem('transactions', '[]');
+    if(!localStorage.getItem('profile')) localStorage.setItem('profile', '{}');
+}
+
+// ==================== HIỂN THỊ THÔNG BÁO ====================
+function showToast(message, type='') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show ' + type;
+    setTimeout(()=> toast.classList.remove('show'), 2500);
+}
+
+// ==================== ĐỊNH DẠNG TIỀN ====================
+function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+}
+
+// ==================== CẬP NHẬT GIAO DIỆN ====================
+function updateBalance() {
+    const balance = parseInt(localStorage.getItem('balance') || 0);
+    document.getElementById('balance').textContent = formatMoney(balance);
+}
+
+// ==================== HIỂN THỊ SẢN PHẨM ====================
+function renderProducts() {
+    const container = document.getElementById('productList');
+    container.innerHTML = products.map(p => `
+        <div class="product-item">
+            <div class="product-img">${p.icon}</div>
+            <div class="product-info">
+                <div class="product-name">${p.name}</div>
+                <div class="product-price">${formatMoney(p.price)}</div>
+                <button class="add-cart-btn" onclick="addToCart(${p.id})">➕ Thêm giỏ</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ==================== GIỎ HÀNG ====================
+function getCart() { return JSON.parse(localStorage.getItem('cart') || '[]'); }
+function saveCart(cart) { localStorage.setItem('cart', JSON.stringify(cart)); renderCart(); }
+
+function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    if(!product) return;
+    const cart = getCart();
+    const exist = cart.find(i => i.id === id);
+    if(exist) exist.quantity++;
+    else cart.push({...product, quantity:1});
+    saveCart(cart);
+    showToast(`✅ Đã thêm "${product.name}" vào giỏ hàng`, 'success');
+}
+
+function removeFromCart(id) {
+    let cart = getCart();
+    cart = cart.filter(i => i.id !== id);
+    saveCart(cart);
+}
+
+function renderCart() {
+    const cart = getCart();
+    const container = document.getElementById('cartList');
+    if(cart.length === 0) {
+        container.innerHTML = '<div class="empty-state"><span>🛒</span>Giỏ hàng trống</div>';
+        document.getElementById('cartTotal').innerHTML = 'Tổng: 0 VNĐ';
+        return;
+    }
+    let total = 0;
+    container.innerHTML = cart.map(item => {
+        total += item.price * item.quantity;
+        return `
+            <div class="cart-item">
+                <div class="cart-info">
+                    <h4>${item.name}</h4>
+                    <p>Số lượng: ${item.quantity}</p>
+                </div>
+                <div>
+                    <div class="cart-price">${formatMoney(item.price * item.quantity)}</div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">Xóa</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    document.getElementById('cartTotal').innerHTML = `<strong>Tổng: ${formatMoney(total)}</strong>`;
+}
+
+function checkout() {
+    const cart = getCart();
+    if(cart.length === 0) { showToast('❌ Giỏ hàng trống!', 'error'); return; }
+    let total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    let balance = parseInt(localStorage.getItem('balance') || 0);
+    if(balance < total) { showToast('❌ Số dư không đủ, vui lòng nạp tiền!', 'error'); return; }
+    
+    // Trừ tiền
+    balance -= total;
+    localStorage.setItem('balance', balance);
+    
+    // Thêm giao dịch
+    addTransaction('payment', -total, `Thanh toán ${cart.length} sản phẩm`);
+    
+    // Xóa giỏ hàng
+    saveCart([]);
+    updateBalance();
+    showToast('✅ Thanh toán thành công!', 'success');
+}
+
+// ==================== GIAO DỊCH ====================
+function addTransaction(type, amount, note) {
+    const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+    tx.unshift({
+        id: Date.now(),
+        type,
+        amount,
+        note,
+        date: new Date().toLocaleString('vi-VN')
+    });
+    localStorage.setItem('transactions', JSON.stringify(tx));
+    renderTransactions();
+}
+
+function renderTransactions() {
+    const tx = JSON.parse(localStorage.getItem('transactions') || '[]');
+    const container = document.getElementById('transactionList');
+    if(tx.length === 0) {
+        container.innerHTML = '<div class="empty-state"><span>📋</span>Chưa có giao dịch nào</div>';
+        return;
+    }
+    container.innerHTML = tx.map(t => `
+        <div class="tx-item">
+            <div>
+                <div class="tx-type ${t.type === 'deposit' ? 'deposit' : t.type === 'withdraw' ? 'withdraw' : ''}">
+                    ${t.type === 'deposit' ? '⬆️ Nạp tiền' : t.type === 'withdraw' ? '⬇️ Rút tiền' : '🛍️ Thanh toán'}
+                </div>
+                <div class="tx-date">${t.date}</div>
+                <div style="font-size:13px; color:#64748b; margin-top:4px;">${t.note || '—'}</div>
+            </div>
+            <div class="tx-amount" style="color:${t.amount >= 0 ? '#16a34a' : '#dc2626'}">
+                ${t.amount >= 0 ? '+' : ''}${formatMoney(t.amount)}
+            </div>
+        </div>
+    `).join('');
+}
+
+// ==================== NẠP TIỀN ====================
+function submitDeposit() {
+    const amount = parseInt(document.getElementById('depositAmount').value);
+    const method = document.getElementById('depositMethod').value;
+    const note = document.getElementById('depositNote').value || 'Nạp tiền vào tài khoản';
+    
+    if(!amount || amount <= 0) { showToast('❌ Vui lòng nhập số tiền hợp lệ!', 'error'); return; }
+    
+    let balance = parseInt(localStorage.getItem('balance') || 0);
+    balance += amount;
+    localStorage.setItem('balance', balance);
+    
+    addTransaction('deposit', amount, `${note} (${method})`);
+    updateBalance();
+    
+    document.getElementById('depositAmount').value = '';
+    document.getElementById('depositNote').value = '';
+    showToast(`✅ Nạp thành công ${formatMoney(amount)}!`, 'success');
+}
+
+// ==================== RÚT TIỀN ====================
+function submitWithdraw() {
+    const amount = parseInt(document.getElementById('withdrawAmount').value);
+    const info = document.getElementById('withdrawInfo').value;
+    const note = document.getElementById('withdrawNote').value || 'Yêu cầu rút tiền';
+    let balance = parseInt(localStorage.getItem('balance') || 0);
+    
+    if(!amount || amount <= 0) { showToast('❌ Vui lòng nhập số tiền hợp lệ!', 'error'); return; }
+    if(amount > balance) { showToast('❌ Số dư không đủ!', 'error'); return; }
+    if(!info.trim()) { showToast('❌ Vui lòng nhập thông tin nhận tiền!', 'error'); return; }
+    
+    balance -= amount;
+    localStorage.setItem('balance', balance);
+    
+    addTransaction('withdraw', -amount, `${note} → ${info}`);
+    updateBalance();
+    
+    document.getElementById('withdrawAmount').value = '';
+    document.getElementById('withdrawInfo').value = '';
+    document.getElementById('withdrawNote').value = '';
+    showToast(`✅ Yêu cầu rút ${formatMoney(amount)} thành công!`, 'success');
+}
+
+// ==================== THÔNG TIN & CHỈNH SỬA ====================
+function loadProfile() {
+    const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+    document.getElementById('userName').value = profile.name || '';
+    document.getElementById('userPhone').value = profile.phone || '';
+    document.getElementById('userEmail').value = profile.email || '';
+    document.getElementById('userAddress').value = profile.address || '';
+}
+
+function saveProfile() {
+    const profile = {
+        name: document.getElementById('userName').value,
+        phone: document.getElementById('userPhone').value,
+        email: document.getElementById('userEmail').value,
+        address: document.getElementById('userAddress').value
+    };
+    localStorage.setItem('profile', JSON.stringify(profile));
+    showToast('✅ Đã lưu thông tin tài khoản!', 'success');
+}
+
+// ==================== CHUYỂN TRANG ====================
+document.querySelectorAll('.nav-btn, .nav-item').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const pageId = this.getAttribute('data-page');
+        if(!pageId) return;
+        
+        // Cập nhật trạng thái active
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll(`[data-page="${pageId}"]`).forEach(b => b.classList.add('active'));
+        
+        // Hiển thị trang
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        // Tải dữ liệu tương ứng
+        if(pageId === 'cart') renderCart();
+        if(pageId === 'history') renderTransactions();
+        if(pageId === 'profile') loadProfile();
+    });
+});
+
+// ==================== KHỞI TẠO ====================
+document.addEventListener('DOMContentLoaded', function() {
+    initData();
+    updateBalance();
+    renderProducts();
+    renderCart();
+    renderTransactions();
+    loadProfile();
+});
+</script>
+</body>
+</html>
